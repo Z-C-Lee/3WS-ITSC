@@ -14,159 +14,14 @@ from miVLAD_MNIST.Main import encode
 from tools.processCSV import shuffle_data
 import random
 
-
-def extract(fileName, toFileName):
+def extractByFile_fisvdd(filename, goalFile, flag):
     """
-    将提取的句子保存至CSV文件
-    :param fileName: .CSV
-    :param toFileName: .CSV格式
+    Three samples by file name
+    :param filename: input file
+    :param goalFile: output file
+    :param flag: True(specify sample size), False(custom sample size)
     :return:
     """
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-    file = pd.read_csv(fileName,header=None)
-
-    all_data = scio.loadmat("data/sentence_vec/Amazon_train.mat")['data']
-    label = []
-    for i in (all_data[:, 1]).tolist():
-        label.append(i[0, 0])
-    dic = collections.Counter(label)
-    label = np.array(label)
-
-    flag = True
-    save_data = None
-    for key in dic:
-        index = np.where(label == key)
-        data = all_data[index,0].reshape(all_data[index,1].shape[1],1)
-        # print(data)
-        model = fisvdd(data, 0.7)
-        sv_index_site = model.find_sv()
-        sv_index = index[0][sv_index_site]
-        # print(max(sv_index),np.array(file).shape)
-        if flag:
-            save_data = np.array(file)[sv_index]
-            flag = False
-        else:
-            save_data = np.concatenate((save_data, np.array(file)[sv_index]))
-
-    dataframe = pd.DataFrame({'a_name': save_data[:,0], 'b_name': save_data[:,1]})
-    dataframe.to_csv(toFileName, index=False, sep=',',header=False)
-    shuffle_data(toFileName)
-    print("sample size:{}".format(save_data.shape[0]))
-    print("--------end sampling-----------")
-
-
-def extractByFolder_random(fileFolder, goalFolder):
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-    allFile = None
-
-    for root, dirs, files in os.walk(fileFolder):
-        allFile = files
-
-    for file_name in allFile:
-        ab_path = fileFolder + "\\" + file_name
-        file = pd.read_csv(ab_path, header=None)
-
-        fileName = ab_path.split("\\")[-1].split(".")[0]
-
-        print(file[1].value_counts()[0] ,file[1].value_counts()[1])
-        if file[1].value_counts()[0] > file[1].value_counts()[1]:
-            key = 1
-        else:
-            key = 0
-        differ = np.abs(file[1].value_counts()[0] - file[1].value_counts()[1])
-
-        # flag = True
-        # save_data = None
-        index = np.where(np.array(file[1]) == key)
-
-        sample_data = np.array(file)[index]
-        save_data = []
-        for i in range(300):
-            random_index = np.random.randint(0, sample_data.shape[0])
-            save_data.append(sample_data[random_index])
-        save_data = np.array(save_data)
-        save_data = np.concatenate((np.array(file), save_data))
-
-        # if flag:
-        #     save_data = np.array(file)[sv_index]
-        #     flag = False
-        # else:
-        #     save_data = np.concatenate((save_data, np.array(file)[sv_index]))
-
-        dataframe = pd.DataFrame({'a_name': save_data[:, 0], 'b_name': save_data[:, 1]})
-        dataframe.to_csv(goalFolder + "/" + fileName + ".csv", index=False, sep=',', header=False)
-        print("sample size:{}".format(sample_data.shape[0]))
-    print("----------end sampling-----------")
-
-
-def extractByFolder_fisvdd(fileFolder, goalFolder, flag):
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-    allFile=None
-
-    for root, dirs, files in os.walk(fileFolder):
-        allFile = files
-
-    for file_name in allFile:
-        ab_path=fileFolder+"/"+file_name
-        file = pd.read_csv(ab_path, header=None)
-
-        folderName = ab_path.split("/")[-3]
-        fileName = ab_path.split("/")[-1].split(".")[0]
-
-        dataFile = "data/sample_vec/" + folderName + "/" + fileName + ".mat"
-        all_data = scio.loadmat(dataFile)['data']
-
-        if flag:
-            if file[1].value_counts()[0] > file[1].value_counts()[1]:
-                key = 1
-            else:
-                key = 0
-            differ = np.abs(file[1].value_counts()[0] - file[1].value_counts()[1])
-
-            index = np.where(np.array(file[1]) == key)
-            data = all_data[index, 0].reshape(all_data[index, 1].shape[1], 1)
-
-            model = fisvdd(data, 0.6)
-            sv_index_site = model.find_sv()
-            sv_index = index[0][sv_index_site]
-            sample_data = np.array(file)[sv_index]
-
-            save_data = []
-            for i in range(differ):
-                random_index = np.random.randint(0, sample_data.shape[0])
-                save_data.append(sample_data[random_index])
-
-            save_data = np.array(save_data)
-            save_data = np.concatenate((np.array(file),save_data))
-
-        else:
-            if file[1].value_counts()[0] < file[1].value_counts()[1]:
-                key = 1
-            else:
-                key = 0
-            # differ = np.abs(file[1].value_counts()[0] - file[1].value_counts()[1])
-
-            index = np.where(np.array(file[1]) == key)
-            reserve_index = np.where(np.array(file[1]) != key)
-
-            data = all_data[index, 0].reshape(all_data[index, 1].shape[1], 1)
-            reserve_data = np.array(file)[reserve_index]
-
-            model = fisvdd(data, 0.6)
-            sv_index_site = model.find_sv()
-            sv_index = index[0][sv_index_site]
-            sample_data = np.array(file)[sv_index]
-
-            save_data = sample_data
-            save_data = np.concatenate((reserve_data,save_data))
-
-        dataframe = pd.DataFrame({'a_name': save_data[:, 0], 'b_name': save_data[:, 1]})
-        dataframe.to_csv(goalFolder+"/"+fileName+".csv", index=False, sep=',', header=False)
-
-        print("sample size:{}".format(sample_data.shape[0]))
-    print("----------end sampling-----------")
-
-def extractByFile_fisvdd(filename, goalFile, flag):
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
     file = pd.read_csv(filename, header=None)
@@ -180,27 +35,32 @@ def extractByFile_fisvdd(filename, goalFile, flag):
     all_data = scio.loadmat(dataFile)['data']
 
     if flag:
+        # Sampling label confirmation
         if file[1].value_counts()[0] < file[1].value_counts()[1]:
             key = 1
         else:
             key = 0
-
+        # Get the sample number of the majority class in the file
         index = np.where(np.array(file[1]) == key)
+        # Get the sample number of the minority class in the file
         reserve_index = np.where(np.array(file[1]) != key)
-
+        # Get the sample of the majority class in the file
         data = all_data[index, 0].reshape(all_data[index, 1].shape[1], 1)
+        # Get the sample of the minority class in the file
         reserve_data = np.array(file)[reserve_index]
-
+        # fisvdd model definition
         model = fisvdd(data, 0.35)
+        # Get support vector number
         sv_index_site = model.find_sv()
         sv_index = index[0][sv_index_site]
         sample_data = np.array(file)[sv_index]
         print("sample size:{}".format(sample_data.shape[0]))
-
+        # Integrate training samples
         save_data = np.array(random.sample(sample_data.tolist(), file[1].value_counts()[0]))
         save_data = np.concatenate((reserve_data, save_data))
 
     else:
+        # Explain the same as "if"
         if file[1].value_counts()[0] < file[1].value_counts()[1]:
             key = 1
         else:
@@ -229,24 +89,37 @@ def extractByFile_fisvdd(filename, goalFile, flag):
 
 
 def extractByFile_random(filename, goalFile, flag):
+    """
+    Randomly undersample based on filename
+    :param filename: input file
+    :param goalFile: output file
+    :param flag: True(specify sample size), False(custom sample size)
+    :return:
+    """
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
     file = pd.read_csv(filename, header=None)
 
     if flag:
+        # Sampling label confirmation
         if file[1].value_counts()[0] < file[1].value_counts()[1]:
             key = 1
         else:
             key = 0
+        # Get the sample number of the majority class in the file
         index = np.where(np.array(file[1]) == key)
+        # Get the sample number of the minority class in the file
         reserve_index = np.where(np.array(file[1]) != key)
+        # Get the sample of the majority class in the file
         sample_data = np.array(file)[index]
+        # Get the sample of the minority class in the file
         reserve_data = np.array(file)[reserve_index]
+        # Integrate training samples
         save_data = np.array(random.sample(sample_data.tolist(), file[1].value_counts()[0]))
         print("sample size:{}".format(file[1].value_counts()[0]))
         save_data = np.concatenate((reserve_data,save_data))
-        
 
     else:
+        # Explain the same as "if"
         if file[1].value_counts()[0] < file[1].value_counts()[1]:
             key = 1
         else:

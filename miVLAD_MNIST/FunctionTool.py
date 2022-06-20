@@ -18,10 +18,13 @@ import copy
 #                                                                limit=200000)
 cache_dir = "tools"
 # glove = vocab.pretrained_aliases["glove.6B.300d"](cache=cache_dir)
-glove = vocab.GloVe(name='6B', dim=50, cache=cache_dir)  # 与上面等价
+glove = vocab.GloVe(name='6B', dim=50, cache=cache_dir)  
 
 
 def data_Cleaning(dataset):
+    """
+    Data cleaning
+    """
     stop_word = get_stop_word("tools/baidu_stopwords.txt")
     for i in range(len(dataset)):
         t=0
@@ -56,6 +59,9 @@ def dataCleaning(dataset):
 
 
 def get_stop_word(data_dir):
+    """
+    Get stop words
+    """
     with open(data_dir,'r',encoding='utf-8') as data:
         words=set()
         for line in data:
@@ -66,9 +72,9 @@ def get_stop_word(data_dir):
 
 def split_text(text):
     """
-    切分文本，自定义一些规则
+    Split text, customize some rules
     :param text:
-    :return: 分割序列下标
+    :return: split sequence subscript
     """
     split_index=[]
     pattern1 = ";|\.|\?|\(|\)|,|'|!|:"
@@ -105,7 +111,7 @@ def load_file(para_path, start, end):
         REVIEW = data.Field(lower=True)
         fields = [('review', REVIEW), ('label', LABEL)]
 
-        # --------------------分  词-------------------
+        # --------------------Participle-------------------
         train_data = data.TabularDataset(
             path=para_path,
             format='CSV',

@@ -1,7 +1,7 @@
 # -*- coding = utf-8 -*-
 # @Time : 2021/12/11 10:27
 # @Author : Z_C_Lee
-# @File : twssc.py
+# @File : RNN_twssc.py
 # @Software : PyCharm
 
 import pandas as pd

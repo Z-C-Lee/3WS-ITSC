@@ -1,7 +1,7 @@
 # -*- coding = utf-8 -*-
 # @Time : 2021/12/11 10:27
 # @Author : Z_C_Lee
-# @File : twssc.py
+# @File : RNN_twssc.py
 # @Software : PyCharm
 
 import pandas as pd
@@ -12,7 +12,7 @@ from tools.processCSV import find_lack_label
 import numpy as np
 import time
 import os
-from main.nn.LSTM import TextRNN
+from main.nn.TextRNN import TextRNN
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 os.environ['HIP_LAUNCH_BLOCKING'] = '1'
 
